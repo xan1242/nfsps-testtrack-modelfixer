@@ -19,4 +19,4 @@ Afterwards:
 - Backup your old file, and place your patched file in the TRACKS folder with the correct name (e.g. STREAML6R_TestTrack_patched.BUN back to STREAML6R_TestTrack.BUN)
 
 # Credits
-- heyitsleo / LeoCodes21 - figuring out the differences in the formats
+- [heyitsleo / LeoCodes21](https://github.com/LeoCodes21) - figuring out the differences in the formats
