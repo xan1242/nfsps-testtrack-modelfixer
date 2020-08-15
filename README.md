@@ -11,8 +11,9 @@ Use this at your own risk.
 - You should have a file with _patched at the end (e.g. STREAML6R_TestTrack_patched.BUN)
 
 ## CMD / Terminal way:
-- NFSPS_TestTrack_ModelFixer StreamBundle [OutFileName](optional)
-
+```
+NFSPS_TestTrack_ModelFixer StreamBundle [OutFileName]
+```
 Afterwards:
 
 - Backup your old file, and place your patched file in the TRACKS folder with the correct name (e.g. STREAML6R_TestTrack_patched.BUN back to STREAML6R_TestTrack.BUN)
