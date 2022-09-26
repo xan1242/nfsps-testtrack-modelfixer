@@ -15,6 +15,8 @@ char FileExt[16];
 
 struct stat st = { 0 };
 
+bool bFixupMats = true;
+
 struct ProtoMatStruct
 {
 	int Pointer1;
@@ -39,54 +41,26 @@ struct ProtoMatStruct
 
 struct FinalMatStruct
 {
-	int Pointer1;
-	int Pointer2;
-	int Pointer3;
-	int Unk1;
-	int Unk2;
-	int Unk3;
-	char unkbytes[8];
-	int Unk4;
-	int Unk5;
-	int Unk6;
-	int ProtoChange1;
-	int ProtoChange2;
-	int Unk7[6];
-	int Unk8;
-	char Unk9[4];
-	int Unk10[10];
+	int Pointer1; // 0
+	int Pointer2; // 4
+	int Pointer3; // 8
+	int Unk1; // C
+	int Unk2; // 10
+	int Unk3; // 14
+	char unkbytes[8]; // 18
+	int Unk4; // 20
+	int Unk5; // 24
+	int Unk6; // 28
+	int ProtoChange1; // 2C
+	int ProtoChange2; // 30
+	int Unk7[6]; // 34
+	int Unk8; // 3A
+	char Unk9[4]; // 3E
+	int Unk10[10]; // 42
 	int Unk11;
-}FinalMat, PreDefMat;
+}FinalMat;
 
 void *OutFile;
-
-void PreDefMatWrite()
-{
-	PreDefMat.Pointer1 = 0;
-	PreDefMat.Pointer2 = 4;
-	PreDefMat.Pointer3 = 0;
-	PreDefMat.Unk1 = 1;
-	PreDefMat.Unk2 = 2;
-	PreDefMat.Unk3 = 3;
-	PreDefMat.unkbytes[0] = 0xFF;
-	PreDefMat.unkbytes[1] = 0xFF;
-	PreDefMat.unkbytes[2] = 0xFF;
-	PreDefMat.unkbytes[3] = 0xFF;
-	PreDefMat.unkbytes[4] = 0x0;
-	PreDefMat.unkbytes[5] = 0x1;
-	PreDefMat.unkbytes[6] = 0x2;
-	PreDefMat.unkbytes[7] = 0x3;
-	PreDefMat.Unk4 = 0x4FF;
-	PreDefMat.Unk5 = 0xA10802BF;
-	PreDefMat.Unk6 = 0x2A4000;
-	PreDefMat.ProtoChange1 = 0xB4;
-	PreDefMat.ProtoChange2 = 0xFF;
-	PreDefMat.Unk8 = 0x21BC;
-	PreDefMat.Unk9[0] = 0;
-	PreDefMat.Unk9[1] = 0;
-	PreDefMat.Unk9[2] = 0x44;
-	PreDefMat.Unk9[3] = 0x80;
-}
 
 void ProtoToFinalBridge()
 {
@@ -129,7 +103,7 @@ int ParseAndFixMaterial(FILE *f, int RelativeEnd, int ChunkSize)
 				bFinishedPadding = true;
 				fseek(f, -1, SEEK_CUR);
 				MatsOffset = ftell(f);
-				PaddingSize = PaddingStart - MatsOffset;
+				PaddingSize = MatsOffset - PaddingStart;
 				TrueChunkSize = ChunkSize - PaddingSize;
 				NumMaterial = TrueChunkSize / sizeof(ProtoMatStruct);
 				break;
@@ -140,16 +114,24 @@ int ParseAndFixMaterial(FILE *f, int RelativeEnd, int ChunkSize)
 			fseek(f, 4, SEEK_CUR);
 		}
 	}
-	//fread(&ProtoMat, sizeof(ProtoMatStruct), 1, f);
-	//fseek(f, RelativeEnd, SEEK_CUR);
-	//fread(&ProtoMat, sizeof(ProtoMatStruct), 1, f);
-
-	//printf("NumMaterial = %d\n", NumMaterial);
 
 	for (unsigned int i = 0; i < NumMaterial; i++)
 	{
+		memset(&ProtoMat, 0, sizeof(ProtoMatStruct));
+		memset(&FinalMat, 0, sizeof(FinalMatStruct));
 		fread(&ProtoMat, sizeof(ProtoMatStruct), 1, f);
-		ProtoToFinalBridge();
+		
+		if (ProtoMat.ProtoChange2)
+			ProtoToFinalBridge();
+		else
+			memcpy(&FinalMat, &ProtoMat, 128);
+		
+
+
+		if ((*(int*)((int)(&(FinalMat)) + 0x4) > 4) && bFixupMats)
+			*(int*)((int)(&(FinalMat)) + 0x4) = *(int*)((int)(&(FinalMat)) + 0x4) + 1;
+
+
 		printf("Patching output memory image at @ 0x%X !\n", MatsOffset);
 		// patch memory image of the file now
 		memcpy((void*)((int)OutFile + MatsOffset), &FinalMat, sizeof(FinalMatStruct));
